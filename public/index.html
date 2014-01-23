@@ -1,0 +1,89 @@
+<!doctype html>
+<html ng-app="timush">
+<head>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.8/angular.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/controllers/manual.js"></script>
+    <script src="js/controllers/auto.js"></script>
+    <script src="js/controllers/statistics.js"></script>
+
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+    <script src="js/graph.js"></script>
+
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles/timush.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <h1>The Return of the Timush</h1>
+        <hr>
+
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#manual" data-toggle="tab">Manual</a></li>
+            <li><a href="#auto" data-toggle="tab">Auto</a></li>
+            <li><a href="#statistics" data-toggle="tab">Statistics</a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <!--********* ManualController GUI for testing one site ***********-->
+            <div class="tab-pane fade in active" id="manual" ng-controller="ManualController">
+                <div class="col-md-6">
+                    Server is waiting. Feel free to start performance testing today it self.
+                    <div class="spacer"></div>
+                    <button class="btn btn-primary btn-lg" ng-click="testPerformance()" ng-disabled="loading">Let's test this
+                        shit!
+                    </button>
+                    <img src="img/loading.gif" ng-show="loading" style="height:50px;">
+                    <hr/>
+                    <div class="alert alert-warning">
+                        {{renderingTime}}
+                    </div>
+
+                    <div id="graphs"></div>
+                </div>
+            </div>
+
+            <!--********* ManualController GUI for adding and removing sites for auto testing ***********-->
+            <div class="tab-pane fade" id="auto" ng-controller="AutoController">
+                <div ng-show="loading" class="center">
+                    <h3>Loading sites. Hold on.</h3>
+                    <img src="img/gangam-loading.gif" />
+                </div>
+
+                <div ng-show="!loading">
+                    <h4 >Add sites to test automaticly</h4>
+                    <div ng-repeat="site in sitesArray" class="shown-site">
+                        <input  class="form-control" id="disabledInput" type="text" placeholder="{{site}}" disabled >
+                        <button type="button" class="btn btn-danger" ng-click="removeSite($index)"><span class="glyphicon glyphicon-remove" ></span> Remove</button>
+                    </div>
+
+
+                    <div class="shown-site">
+                        <input type="input" class="form-control" placeholder="Enter a new url to test" ng-model="siteToAdd">
+                        <button type="button" class="btn btn-success" ng-click="setSites()"><span class="glyphicon glyphicon-plus"></span> Add</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="statistics" ng-controller="StatisticsController">
+                <div ng-show="loading" class="center">
+                    <h3>Loading statistics. Meeeeeeeeeeeeeeeeh.</h3>
+                    <img src="img/loading.gif" />
+                </div>
+
+                <div ng-show="!loading">
+                    <h4 >Statistics</h4>
+                    <button type="button" class="btn btn-warning btn-lg" ng-click="download()"><span class="glyphicon glyphicon-arrow-down"></span> Download CSV</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

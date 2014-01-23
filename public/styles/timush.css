@@ -1,0 +1,31 @@
+.checkbox .unbold{
+
+}
+
+#site-list .unbold{
+    font-weight: normal;
+}
+
+.spacer{
+    margin-top:10px;
+}
+
+.tab-pane{
+    margin-top:10px;
+}
+
+.center{
+    text-align: center;
+}
+
+
+/****** AUTO CONTROLLER ***********/
+
+.shown-site{
+    margin-top:5px;
+}
+
+.shown-site .form-control{
+    display: inline-block;
+    width:700px;
+}
