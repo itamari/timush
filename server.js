@@ -8,7 +8,7 @@ var Q = require('q');
 var DataProvider = require('./server/csvDataProvider').DataProvider;
 var SitesAnalyzer = require('./server/sitesAnalyzer').SitesAnalyzer;
 
-var port = parseInt(process.env.PORT, 10) || 4567;
+var port = 80;
 var result = [];
 
 var dataProvider = new DataProvider();
