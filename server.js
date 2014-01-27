@@ -23,7 +23,7 @@ var sitesAnalyzer = new SitesAnalyzer();
 setTimeout(function(){
     console.log("testing sites...");
     sitesAnalyzer.testSites();
-}, 100); //DAILY!
+}, 24*60*3600); //DAILY!
 
 /**************************** SERVER ****************************/
 app.use(express.bodyParser());
