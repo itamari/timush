@@ -8,7 +8,6 @@ timush.controller('AutoController', function ($scope, $http) {
 
     $scope.getSites = function() {
         $http.get('/get-sites').success(function (res) {
-            console.log(res);
             $scope.sitesArray = res;
             $scope.loading = false;
         });
