@@ -23,7 +23,7 @@ var sitesAnalyzer = new SitesAnalyzer();
 setTimeout(function(){
     console.log("testing sites...");
     sitesAnalyzer.testSites();
-}, 24*60*3600); //DAILY!
+}, 3*3600); //DAILY!
 
 /**************************** SERVER ****************************/
 app.use(express.bodyParser());
@@ -34,7 +34,7 @@ app.use(express.bodyParser());
 app.post('/manual-performance', function (req, res) {
     phantom.create(function (err, phantom) {
         phantom.createPage(function (err, page) {
-            page.open("http://wixapps.wix.com/gordonsmedt?statemap=140115.1051.48&mode=debug&wconsole=false&timush=true#!representation/c65q", function (err, status) {
+            page.open("http://wixapps.nigiri.wixpress.com/gordonsmedt?timush=true&wconsole=false#!representation/c65q", function (err, status) {
 
             });
 
