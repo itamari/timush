@@ -20,7 +20,7 @@ var sitesAnalyzer = new SitesAnalyzer();
 //    sitesAnalyzer.testSites();
 //}, 60000 * 60* 24); //DAILY!
 
-setTimeout(function(){
+setInterval(function(){
     console.log("testing sites...");
     sitesAnalyzer.testSites();
 }, 3*3600); //DAILY!
