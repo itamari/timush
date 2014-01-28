@@ -9,11 +9,13 @@ DataProvider = function() {
 
 
 DataProvider.prototype.addSite = function(data) {
+    console.log("adding site: " + data);
     fs.appendFileSync(sitesFile, "\n" + data);
     return this._readSitesFromFile();
 };
 
 DataProvider.prototype.removeSite = function(data) {
+    console.log("removing site: " + data);
     var sites = this._readSitesFromFile();
     var indexToRemove = sites.indexOf(data);
     if(indexToRemove != -1){
@@ -26,6 +28,7 @@ DataProvider.prototype.removeSite = function(data) {
 };
 
 DataProvider.prototype.getSites = function(){
+    console.log("returning all sites from csv file: ");
     return this._readSitesFromFile();
 }
 
@@ -45,6 +48,7 @@ DataProvider.prototype._readSitesFromFile = function(){
 }
 
 DataProvider.prototype.setResult = function(siteResult){
+    console.log("writing result to file: " + siteResult);
     fs.appendFileSync(resultsFile, siteResult.join() + "\n");
 }
 
