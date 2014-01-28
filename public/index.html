@@ -33,8 +33,10 @@
         <div class="tab-content">
             <!--********* ManualController GUI for testing one site ***********-->
             <div class="tab-pane fade in active" id="manual" ng-controller="ManualController">
-                <div class="col-md-6">
+                <div class="col-md-10">
                     Server is waiting. Feel free to start performance testing today it self.
+                    <div class="spacer"></div>
+                    <input  class="form-control" type="text" placeholder="Site Url" ng-model="manualSiteInput">
                     <div class="spacer"></div>
                     <button class="btn btn-primary btn-lg" ng-click="testPerformance()" ng-disabled="loading">Let's test this
                         shit!
@@ -42,7 +44,7 @@
                     <img src="img/loading.gif" ng-show="loading" style="height:50px;">
                     <hr/>
                     <div class="alert alert-warning">
-                        {{renderingTime}}
+                        {{infoMessage}}
                     </div>
 
                     <div id="graphs"></div>

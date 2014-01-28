@@ -23,7 +23,7 @@ var sitesAnalyzer = new SitesAnalyzer();
 setInterval(function(){
     console.log("testing sites...");
     sitesAnalyzer.testSites();
-}, 3*3600); //DAILY!
+}, 3*60*1000);
 
 /**************************** SERVER ****************************/
 app.use(express.bodyParser());
@@ -32,22 +32,16 @@ app.use(express.bodyParser());
  * Recieve the post request from the user
  */
 app.post('/manual-performance', function (req, res) {
-    phantom.create(function (err, phantom) {
-        phantom.createPage(function (err, page) {
-            page.open("http://wixapps.nigiri.wixpress.com/gordonsmedt?timush=true&wconsole=false#!representation/c65q", function (err, status) {
+    var siteToTest = req.body.site;
 
-            });
-
-            page.onConsoleMessage = function (msg) {
-                if (msg.indexOf("view ready") != -1) {
-                    var timeToRender = parseInt(msg.split(':')[2]);
-                    result.push(timeToRender);
-                    res.send(result);
-                    phantom.exit();
-                }
-            }
+    if(siteToTest){
+        console.log("testing a single site " + siteToTest);
+        sitesAnalyzer.testSingleSite(siteToTest).then(function(result){
+            res.end(JSON.stringify(result));
         });
-    });
+    } else {
+        res.end("must send a site url to test...");
+    }
 });
 
 app.get('/get-sites', function (req, res) {
@@ -71,27 +65,17 @@ app.post('/remove-site', function (req, res) {
     res.end(JSON.stringify(result));
 });
 
-
-
-
 app.get('/download', function(req, res){
     var file = __dirname + '/server/results.csv';
     var filename = path.basename(file);
     var mimetype = mime.lookup(file);
 
-//    res.setHeader('Content-disposition', 'attachment; filename=' + filename);
-//    res.setHeader('Content-type', mimetype);
     res.setHeader('Content-type','text/html');
-    //var filestream = fs.createReadStream(file);
     var d = fs.readFileSync(file).toString();
-    //d = d.replace(/ /g,"_");
-    //d = d.replace(/,/g," ");
     res.end(d);
-    //filestream.write(d);
-   // filestream.pipe(res);
 });
 
-app.use(express.static(__dirname + '/'));
+app.use(express.static(__dirname + '/public/'));
 
 console.log("listening on port " + port);
 app.listen(port);

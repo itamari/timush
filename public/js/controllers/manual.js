@@ -1,10 +1,11 @@
 timush.controller('ManualController', function ($scope, $http) {
-    $scope.renderingTime = "Click on the button to test performance!";
+    $scope.infoMessage = "Click on the button to test performance!";
     $scope.loading = false;
+    $scope.manualSiteInput = '';
 
 
     var startLoading = function () {
-        $scope.renderingTime = "Loading...";
+        $scope.infoMessage = "Loading... (This will take approx 20 seconds!)";
         $scope.loading = true;
     }
 
@@ -12,8 +13,8 @@ timush.controller('ManualController', function ($scope, $http) {
     $scope.testPerformance = function () {
         startLoading();
 
-        $http.post('/manual-performance', {}).success(function (res) {
-            $scope.renderingTime = "Rendering took " + res[res.length - 1] + " milisecondush!";
+        $http.post('/manual-performance', { site : $scope.manualSiteInput }).success(function (res) {
+            $scope.infoMessage = res;
             $scope.loading = false;
         });
     }

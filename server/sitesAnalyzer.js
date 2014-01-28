@@ -1,4 +1,5 @@
 var phantom = require('node-phantom-simple');
+var Q = require('q');
 var DataProvider = require('./csvDataProvider').DataProvider;
 var dataProvider = new DataProvider();
 
@@ -14,10 +15,44 @@ SitesAnalyzer.prototype.testSites = function(){
     sites.forEach(function(site){
         self._timeUrl(site);
     });
-
-
 }
 
+/**
+ * manualy test a site and return the result to page
+ * @param siteUrl
+ */
+SitesAnalyzer.prototype.testSingleSite = function(siteUrl){
+    var deferred = Q.defer();
+    var result = [];
+
+    phantom.create(function (err, phantom) {
+        phantom.createPage(function (err, page) {
+            page.open(siteUrl, function (err, status) {
+
+            });
+
+            page.onConsoleMessage = function (msg) {
+                if (msg.indexOf("loading time line") != -1) {
+                    result.push(msg);
+                }
+            }
+
+            setTimeout(function(){
+                deferred.resolve(result);
+                phantom.exit();
+            }, 20*1000); //20 seconds to load a site...
+        });
+    });
+
+    return deferred.promise;
+}
+
+/**
+ * recieve a site url, open phantom page with the url, on console log of timush
+ * read the log and put it in our csv file for later analyzing
+ * @param siteUrl
+ * @private
+ */
 SitesAnalyzer.prototype._timeUrl = function(siteUrl){
     var self = this;
     phantom.create(function (err, phantom) {
@@ -41,11 +76,7 @@ SitesAnalyzer.prototype._timeUrl = function(siteUrl){
 
             page.onConsoleMessage = function (msg) {
                 if (msg.indexOf("loading time line") != -1) {
-                    var result = msg.match(/\[(.*?)\]/g);
-                    for(var i = 0; i < result.length; i++){
-                        result[i] = result[i].substring(0, result[i].length - 1);
-                        result[i] = result[i].substring(1);
-                    }
+                    var result = self._clearResultStrings(msg);
                     self._analyzeSiteResult(result);
                 }
             }
@@ -57,6 +88,25 @@ SitesAnalyzer.prototype._timeUrl = function(siteUrl){
         });
     });
 }
+
+/**
+ * Takes a an array of strings and clears them from "[", "]" chars
+ * and returns an array
+ * @param msg
+ * @returns {Array|{index: number, input: string}}
+ * @private
+ */
+SitesAnalyzer.prototype._clearResultStrings = function(msg){
+    var result = msg.match(/\[(.*?)\]/g);
+
+    for(var i = 0; i < result.length; i++){
+        result[i] = result[i].substring(0, result[i].length - 1);
+        result[i] = result[i].substring(1);
+    }
+
+    return result;
+}
+
 
 /**
  *
