@@ -114,7 +114,7 @@ SitesAnalyzer.prototype._clearResultStrings = function(msg){
  * @private
  */
 SitesAnalyzer.prototype._analyzeSiteResult = function(result){
-    console.log("writing result to file " + result);
+    console.log("asking data provider to save result");
     dataProvider.setResult(result);
 }
 

@@ -15,15 +15,11 @@ var dataProvider = new DataProvider();
 
 var sitesAnalyzer = new SitesAnalyzer();
 
-//setInterval(function(){
-//    console.log("testing sites...");
-//    sitesAnalyzer.testSites();
-//}, 60000 * 60* 24); //DAILY!
-
+/****** Test sites every hour *****/
 setInterval(function(){
     console.log("testing sites...");
     sitesAnalyzer.testSites();
-}, 3*60*1000);
+}, 60*60*1000); //every hour
 
 /**************************** SERVER ****************************/
 app.use(express.bodyParser());
