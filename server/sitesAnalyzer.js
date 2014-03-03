@@ -1,122 +1,103 @@
 var phantom = require('node-phantom-simple');
 var Q = require('q');
-var DataProvider = require('./csvDataProvider').DataProvider;
-var dataProvider = new DataProvider();
+var _ = require('lodash');
 
-var MAXIMUM_TIME_BEFORE_TIMEOUT = 30000; //30 secs
+var DataProvider = require('./mongoDataProvider').DataProvider;
+var connectQuery = 'mongodb://127.0.0.1:27017/local';
+var dataProvider = new DataProvider(connectQuery);
 
+var MAXIMUM_TIME_BEFORE_TIMEOUT = ((1.8) * 60 * 1000); //
+var INTERVAL_BETWEEN_SITES_TEST = (2 * 60 * 1000); //
+var INTERVAL_TO_START_TESTING = (60 * 60 * 1000); //
+
+var SITES_TO_TEST = [
+    "http://wixapps.nigiri.wixpress.com/gordonsmedt?timush=true&statemap=140302.1221.36&mode=debug&wconsole=false#!representation/c65q",
+    "http://wixapps.nigiri.wixpress.com/opinioncarib?timush=true&statemap=140302.1221.36&mode=debug&wconsole=false"
+];
+
+var currentSitesQueue = [];
+
+/**
+ * Start testing all sites once every hour!
+ * @constructor
+ */
 SitesAnalyzer = function() {
 
 };
 
-SitesAnalyzer.prototype.testSites = function(){
+SitesAnalyzer.prototype.initialize = function(){
     var self = this;
-    var sites = dataProvider.getSites();
-    sites.forEach(function(site){
-        self._timeUrl(site);
-    });
+    console.log("Registered Site Analyzer, will start testing sites in 1 hour");
+    setInterval(function(){
+        self.startSitesTesting();
+        console.log("Sites Analyzer has started to run hourly tests...");
+    }, INTERVAL_TO_START_TESTING); // 1 hour
+}
+
+/**
+ * Iterate over all sites, take 2 min max for each site!
+ * Once the result returns insert it into our mongo db >:O
+ */
+SitesAnalyzer.prototype.startSitesTesting = function (){
+    var self = this;
+    currentSitesQueue = _.clone(SITES_TO_TEST);
+
+    var intervalId = setInterval(function(){
+        if(!currentSitesQueue.length){
+            clearInterval(intervalId);
+            console.log("Sites Analyzer has finished testing sites... waiting for next interval...");
+            return;
+        }
+        self.testSingleSite(currentSitesQueue.pop(), self.registerTimingResult);
+    }, INTERVAL_BETWEEN_SITES_TEST);
+}
+
+
+SitesAnalyzer.prototype.registerTimingResult = function(result){
+    console.log("Site analyzer finished testing a site: " + result);
+    if(result.indexOf("error") != -1){
+        return;
+    }
+    dataProvider.insertTimushQuery(result);
 }
 
 /**
  * manualy test a site and return the result to page
  * @param siteUrl
  */
-SitesAnalyzer.prototype.testSingleSite = function(siteUrl){
-    var deferred = Q.defer();
-    var result = [];
-
-    phantom.create(function (err, phantom) {
-        phantom.createPage(function (err, page) {
-            page.open(siteUrl, function (err, status) {
-
-            });
-
-            page.onConsoleMessage = function (msg) {
-                if (msg.indexOf("loading time line") != -1) {
-                    result.push(msg);
-                }
-            }
-
-            setTimeout(function(){
-                deferred.resolve(result);
-                phantom.exit();
-            }, 20*1000); //20 seconds to load a site...
-        });
-    });
-
-    return deferred.promise;
-}
-
-/**
- * recieve a site url, open phantom page with the url, on console log of timush
- * read the log and put it in our csv file for later analyzing
- * @param siteUrl
- * @private
- */
-SitesAnalyzer.prototype._timeUrl = function(siteUrl){
+SitesAnalyzer.prototype.testSingleSite = function(siteUrl, onEnd){
     var self = this;
+    console.log("Site analyzer started testing a site: " + siteUrl);
     phantom.create(function (err, phantom) {
         phantom.createPage(function (err, page) {
-            console.log("created phantom site for page " + siteUrl);
-
             page.open(siteUrl, function (err, status) {
-                //console.log(status, err);
+
             });
 
-            page.onError = function(msg, trace) {
-                var msgStack = ['ERROR: ' + msg];
-                if (trace && trace.length) {
-                    msgStack.push('TRACE:');
-                    trace.forEach(function(t) {
-                        msgStack.push(' -> ' + t.file + ': ' + t.line + (t.function ? ' (in function "' + t.function + '")' : ''));
-                    });
-                }
-                console.error(msgStack.join('\n'));
-            };
-
             page.onConsoleMessage = function (msg) {
-                if (msg.indexOf("loading time line") != -1) {
-                    var result = self._clearResultStrings(msg);
-                    self._analyzeSiteResult(result);
+                if (msg.indexOf("repoEnd") != -1) {
+                    var result = JSON.parse(msg);
+                    console.log("----------------------------------------");
+                    console.log("Timush found string: " + msg);
+                    if(onEnd){
+                        onEnd(result);
+                    } else {
+                        self.registerTimingResult(result);
+                    }
+                    clearTimeout(timoutId);
+                    phantom.exit();
                 }
             }
 
-            setTimeout(function(){
-                console.log("closed server for page " + siteUrl);
+            var timoutId = setTimeout(function(){
+                console.log("----------------------------------------");
+                console.log("Timush could not find the timush string!");
+                onEnd("{error: 'Could not get a timush result'}");
                 phantom.exit();
             }, MAXIMUM_TIME_BEFORE_TIMEOUT);
         });
     });
+
 }
-
-/**
- * Takes a an array of strings and clears them from "[", "]" chars
- * and returns an array
- * @param msg
- * @returns {Array|{index: number, input: string}}
- * @private
- */
-SitesAnalyzer.prototype._clearResultStrings = function(msg){
-    var result = msg.match(/\[(.*?)\]/g);
-
-    for(var i = 0; i < result.length; i++){
-        result[i] = result[i].substring(0, result[i].length - 1);
-        result[i] = result[i].substring(1);
-    }
-
-    return result;
-}
-
-
-/**
- *
- * @param Array such as ["[ppPrt20-h9v]", "[4580.000000016298]", "[584.9999999627471]", "[1394.9999999604188]", "[4870.999999984633]", "[9451.000000000931]"]
- * @private
- */
-SitesAnalyzer.prototype._analyzeSiteResult = function(result){
-    console.log("asking data provider to save result");
-    dataProvider.setResult(result);
-}
-
 
 exports.SitesAnalyzer = SitesAnalyzer;
